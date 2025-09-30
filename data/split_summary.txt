@@ -1,0 +1,26 @@
+EXOPLANET DATA SPLIT SUMMARY
+============================================================
+
+Random State: 42
+Original samples: 9564
+Filtered samples (CONFIRMED + FALSE POSITIVE): 7585
+Excluded CANDIDATE samples: 1979
+
+Train samples: 5309 (69.99%)
+Validation samples: 1138 (15.00%)
+Test samples: 1138 (15.00%)
+
+Class Distribution:
+----------------------------------------
+
+Train:
+  FALSE POSITIVE: 3387 (63.80%)
+  CONFIRMED: 1922 (36.20%)
+
+Validation:
+  FALSE POSITIVE: 726 (63.80%)
+  CONFIRMED: 412 (36.20%)
+
+Test:
+  FALSE POSITIVE: 726 (63.80%)
+  CONFIRMED: 412 (36.20%)

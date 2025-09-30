@@ -1,0 +1,179 @@
+EXOPLANET CLASSIFICATION - MODEL COMPARISON RESULTS
+======================================================================
+
+
+Rank 1: LGBM Classifier
+----------------------------------------------------------------------
+Accuracy: 95.69%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.94      0.94      0.94       412
+FALSE POSITIVE       0.96      0.97      0.97       726
+
+      accuracy                           0.96      1138
+     macro avg       0.95      0.95      0.95      1138
+  weighted avg       0.96      0.96      0.96      1138
+
+======================================================================
+
+Rank 2: XGBoost Classifier
+----------------------------------------------------------------------
+Accuracy: 95.43%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.94      0.93      0.94       412
+FALSE POSITIVE       0.96      0.97      0.96       726
+
+      accuracy                           0.95      1138
+     macro avg       0.95      0.95      0.95      1138
+  weighted avg       0.95      0.95      0.95      1138
+
+======================================================================
+
+Rank 3: Random Forest
+----------------------------------------------------------------------
+Accuracy: 94.99%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.95      0.91      0.93       412
+FALSE POSITIVE       0.95      0.97      0.96       726
+
+      accuracy                           0.95      1138
+     macro avg       0.95      0.94      0.95      1138
+  weighted avg       0.95      0.95      0.95      1138
+
+======================================================================
+
+Rank 4: Gradient Boosting
+----------------------------------------------------------------------
+Accuracy: 94.46%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.92      0.93      0.92       412
+FALSE POSITIVE       0.96      0.95      0.96       726
+
+      accuracy                           0.94      1138
+     macro avg       0.94      0.94      0.94      1138
+  weighted avg       0.94      0.94      0.94      1138
+
+======================================================================
+
+Rank 5: Bagging Classifier
+----------------------------------------------------------------------
+Accuracy: 93.94%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.93      0.90      0.92       412
+FALSE POSITIVE       0.95      0.96      0.95       726
+
+      accuracy                           0.94      1138
+     macro avg       0.94      0.93      0.93      1138
+  weighted avg       0.94      0.94      0.94      1138
+
+======================================================================
+
+Rank 6: AdaBoost
+----------------------------------------------------------------------
+Accuracy: 93.50%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.93      0.89      0.91       412
+FALSE POSITIVE       0.94      0.96      0.95       726
+
+      accuracy                           0.93      1138
+     macro avg       0.93      0.93      0.93      1138
+  weighted avg       0.93      0.93      0.93      1138
+
+======================================================================
+
+Rank 7: Neural Network
+----------------------------------------------------------------------
+Accuracy: 93.15%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.91      0.90      0.91       412
+FALSE POSITIVE       0.95      0.95      0.95       726
+
+      accuracy                           0.93      1138
+     macro avg       0.93      0.93      0.93      1138
+  weighted avg       0.93      0.93      0.93      1138
+
+======================================================================
+
+Rank 8: Extra Trees
+----------------------------------------------------------------------
+Accuracy: 92.97%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.92      0.88      0.90       412
+FALSE POSITIVE       0.94      0.96      0.95       726
+
+      accuracy                           0.93      1138
+     macro avg       0.93      0.92      0.92      1138
+  weighted avg       0.93      0.93      0.93      1138
+
+======================================================================
+
+Rank 9: Decision Tree
+----------------------------------------------------------------------
+Accuracy: 92.88%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.89      0.92      0.90       412
+FALSE POSITIVE       0.95      0.93      0.94       726
+
+      accuracy                           0.93      1138
+     macro avg       0.92      0.93      0.92      1138
+  weighted avg       0.93      0.93      0.93      1138
+
+======================================================================
+
+Rank 10: K-Nearest Neighbor
+----------------------------------------------------------------------
+Accuracy: 90.86%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.83      0.93      0.88       412
+FALSE POSITIVE       0.96      0.90      0.93       726
+
+      accuracy                           0.91      1138
+     macro avg       0.90      0.91      0.90      1138
+  weighted avg       0.91      0.91      0.91      1138
+
+======================================================================
+
+Rank 11: Naive Bayes
+----------------------------------------------------------------------
+Accuracy: 77.24%
+
+Classification Report:
+                precision    recall  f1-score   support
+
+     CONFIRMED       0.62      0.98      0.76       412
+FALSE POSITIVE       0.99      0.65      0.79       726
+
+      accuracy                           0.77      1138
+     macro avg       0.80      0.82      0.77      1138
+  weighted avg       0.85      0.77      0.78      1138
+
+======================================================================
