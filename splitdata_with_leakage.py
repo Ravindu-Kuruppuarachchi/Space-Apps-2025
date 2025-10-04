@@ -12,19 +12,14 @@ def split_data_with_overfitting_prevention(
     val_size=0.20,   # Increased validation size
     random_state=42,
     output_dir='data/',
-    balance_method='smote',  # 'smote', 'undersample', 'smoteenn', or None
-    remove_highly_correlated=True,
-    correlation_threshold=0.95,
-    feature_variance_threshold=0.01):
+    balance_method='smote'):  # 'smote', 'undersample', 'smoteenn', or None
     """
     Split the exoplanet data with overfitting prevention techniques.
     
     Overfitting Prevention Strategies:
     1. Larger validation and test sets
     2. Class balancing (SMOTE/undersampling)
-    3. Remove highly correlated features
-    4. Remove low variance features
-    5. Stratified splitting
+    3. Stratified splitting
     
     Parameters:
     -----------
@@ -40,12 +35,6 @@ def split_data_with_overfitting_prevention(
         Directory to save the split datasets
     balance_method : str
         Method to balance classes: 'smote', 'undersample', 'smoteenn', or None
-    remove_highly_correlated : bool
-        Whether to remove highly correlated features
-    correlation_threshold : float
-        Correlation threshold for feature removal (default: 0.95)
-    feature_variance_threshold : float
-        Minimum variance threshold for features (default: 0.01)
     
     Returns:
     --------
@@ -92,67 +81,11 @@ def split_data_with_overfitting_prevention(
     y = df_filtered['koi_disposition'].copy()
     kepid = df_filtered['kepid'].copy()
     
-    # ===== OVERFITTING PREVENTION TECHNIQUE 1: Remove Low Variance Features =====
+    print(f"\nNumber of features: {X.shape[1]}")
+    
+    # ===== STEP 1: Split Data (Stratified) =====
     print("\n" + "="*70)
-    print("STEP 1: REMOVING LOW VARIANCE FEATURES")
-    print("="*70)
-    
-    # Calculate variance for each feature
-    variances = X.var()
-    low_variance_features = variances[variances < feature_variance_threshold].index.tolist()
-    
-    if len(low_variance_features) > 0:
-        print(f"\nRemoving {len(low_variance_features)} low variance features:")
-        for feat in low_variance_features[:10]:  # Show first 10
-            print(f"  - {feat} (variance: {variances[feat]:.6f})")
-        if len(low_variance_features) > 10:
-            print(f"  ... and {len(low_variance_features) - 10} more")
-        
-        X = X.drop(columns=low_variance_features)
-        feature_cols = [col for col in feature_cols if col not in low_variance_features]
-    else:
-        print("\nNo low variance features found.")
-    
-    print(f"Features after variance filtering: {X.shape[1]}")
-    
-    # ===== OVERFITTING PREVENTION TECHNIQUE 2: Remove Highly Correlated Features =====
-    if remove_highly_correlated:
-        print("\n" + "="*70)
-        print("STEP 2: REMOVING HIGHLY CORRELATED FEATURES")
-        print("="*70)
-        
-        # Fill NaN values temporarily for correlation calculation
-        X_temp = X.fillna(X.median())
-        
-        # Calculate correlation matrix
-        corr_matrix = X_temp.corr().abs()
-        
-        # Select upper triangle of correlation matrix
-        upper_triangle = corr_matrix.where(
-            np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
-        )
-        
-        # Find features with correlation greater than threshold
-        to_drop = [column for column in upper_triangle.columns 
-                  if any(upper_triangle[column] > correlation_threshold)]
-        
-        if len(to_drop) > 0:
-            print(f"\nRemoving {len(to_drop)} highly correlated features (threshold: {correlation_threshold}):")
-            for feat in to_drop[:10]:
-                print(f"  - {feat}")
-            if len(to_drop) > 10:
-                print(f"  ... and {len(to_drop) - 10} more")
-            
-            X = X.drop(columns=to_drop)
-            feature_cols = [col for col in feature_cols if col not in to_drop]
-        else:
-            print(f"\nNo highly correlated features found (threshold: {correlation_threshold})")
-        
-        print(f"Features after correlation filtering: {X.shape[1]}")
-    
-    # ===== STEP 3: Split Data (Stratified) =====
-    print("\n" + "="*70)
-    print("STEP 3: STRATIFIED DATA SPLITTING")
+    print("STEP 1: STRATIFIED DATA SPLITTING")
     print("="*70)
     
     train_ratio = 1.0 - test_size - val_size
@@ -184,10 +117,10 @@ def split_data_with_overfitting_prevention(
     print(f"Validation set: {X_val.shape[0]} samples")
     print(f"Test set: {X_test.shape[0]} samples")
     
-    # ===== OVERFITTING PREVENTION TECHNIQUE 3: Balance Training Data =====
+    # ===== OVERFITTING PREVENTION TECHNIQUE: Balance Training Data =====
     if balance_method:
         print("\n" + "="*70)
-        print(f"STEP 4: BALANCING TRAINING DATA ({balance_method.upper()})")
+        print(f"STEP 2: BALANCING TRAINING DATA ({balance_method.upper()})")
         print("="*70)
         
         print(f"\nOriginal training class distribution:")
@@ -287,15 +220,11 @@ def split_data_with_overfitting_prevention(
         f.write("EXOPLANET DATA SPLIT SUMMARY (WITH OVERFITTING PREVENTION)\n")
         f.write("="*70 + "\n\n")
         f.write("OVERFITTING PREVENTION TECHNIQUES APPLIED:\n")
-        f.write(f"1. Low variance features removed (threshold: {feature_variance_threshold})\n")
-        f.write(f"2. Highly correlated features removed (threshold: {correlation_threshold})\n")
-        f.write(f"3. Class balancing method: {balance_method if balance_method else 'None'}\n")
-        f.write(f"4. Larger validation/test sets ({val_size*100:.0f}%/{test_size*100:.0f}%)\n")
-        f.write(f"5. Stratified sampling\n\n")
+        f.write(f"1. Class balancing method: {balance_method if balance_method else 'None'}\n")
+        f.write(f"2. Larger validation/test sets ({val_size*100:.0f}%/{test_size*100:.0f}%)\n")
+        f.write(f"3. Stratified sampling\n\n")
         f.write(f"Random State: {random_state}\n")
-        f.write(f"Original features: {len(df.columns) - 2}\n")
-        f.write(f"Final features: {len(feature_cols)}\n")
-        f.write(f"Features removed: {len(df.columns) - 2 - len(feature_cols)}\n\n")
+        f.write(f"Total features: {len(feature_cols)}\n\n")
         f.write(f"Train samples: {len(train_df)} ({len(train_df)/(len(train_df)+len(val_df)+len(test_df))*100:.2f}%)\n")
         f.write(f"Validation samples: {len(val_df)} ({len(val_df)/(len(train_df)+len(val_df)+len(test_df))*100:.2f}%)\n")
         f.write(f"Test samples: {len(test_df)} ({len(test_df)/(len(train_df)+len(val_df)+len(test_df))*100:.2f}%)\n\n")
@@ -354,10 +283,7 @@ if __name__ == "__main__":
         val_size=0.20,               # 20% for validation
         random_state=42,
         output_dir='data/',
-        balance_method='smote',      # Options: 'smote', 'undersample', 'smoteenn', None
-        remove_highly_correlated=True,
-        correlation_threshold=0.95,
-        feature_variance_threshold=0.01
+        balance_method='smote'       # Options: 'smote', 'undersample', 'smoteenn', None
     )
     
     # Verify the splits
@@ -367,12 +293,6 @@ if __name__ == "__main__":
     print("OVERFITTING PREVENTION SUMMARY")
     print("="*70)
     print("\nTechniques Applied:")
-    print("  ✓ Removed low variance features")
-    print("  ✓ Removed highly correlated features")
     print("  ✓ Balanced training data (SMOTE)")
     print("  ✓ Larger validation/test sets (20%/20%)")
     print("  ✓ Stratified sampling")
-    print("\nYou can now use these files for ML model training:")
-    print("  - data/train.csv (for training)")
-    print("  - data/validation.csv (for hyperparameter tuning)")
-    print("  - data/test.csv (for final evaluation)")

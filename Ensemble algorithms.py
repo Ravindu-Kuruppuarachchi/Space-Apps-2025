@@ -136,7 +136,7 @@ class ExoplanetEnsembleClassifier:
             ),
             
             'Neural Network': MLPClassifier(
-                hidden_layer_sizes=(100, 50),
+                hidden_layer_sizes=(100, 500),
                 max_iter=500,
                 random_state=42
             ),
@@ -395,7 +395,3 @@ if __name__ == "__main__":
     results = classifier.run_complete_pipeline()
     
     print("\n🚀 Exoplanet classification complete!")
-    print("Check the generated files:")
-    print("  - model_accuracy_comparison.png")
-    print("  - confusion_matrices.png")
-    print("  - model_results_summary.txt")
