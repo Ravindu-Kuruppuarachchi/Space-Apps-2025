@@ -76,10 +76,100 @@ FEATURES = [
     'koi_fwm_stat_sig',  # FW Offset Significance [percent]
 ]
 
+# Critical features that must be present for a row to be valid
+CRITICAL_FEATURES = [
+    'koi_disposition',  # Must have a label
+    'koi_period',  # Orbital period is critical
+    'koi_duration',  # Transit duration is critical
+    'koi_depth',  # Transit depth is critical
+]
 
-def load_and_extract_data(csv_path, output_path='exoplanet_data_clean.csv'):
+
+def clean_data(df, missing_threshold=0.5, critical_features=None):
     """
-    Load the Kepler dataset and extract only the relevant features.
+    Clean the dataset by removing rows with inadequate data.
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        The input dataframe to clean
+    missing_threshold : float
+        Maximum proportion of missing values allowed per row (0 to 1)
+        Default: 0.5 (50% of features can be missing)
+    critical_features : list
+        List of features that must not be missing. Rows missing any of these
+        will be removed regardless of missing_threshold
+    
+    Returns:
+    --------
+    pandas.DataFrame
+        Cleaned dataframe with rows removed
+    """
+    print("\n" + "="*50)
+    print("DATA CLEANING")
+    print("="*50)
+    
+    initial_rows = len(df)
+    print(f"\nInitial number of rows: {initial_rows}")
+    
+    # Step 1: Remove rows where critical features are missing
+    if critical_features is None:
+        critical_features = CRITICAL_FEATURES
+    
+    print(f"\nChecking critical features: {critical_features}")
+    
+    critical_cols = [col for col in critical_features if col in df.columns]
+    if critical_cols:
+        df_cleaned = df.dropna(subset=critical_cols).copy()
+        removed_critical = initial_rows - len(df_cleaned)
+        print(f"Rows removed due to missing critical features: {removed_critical}")
+        print(f"Remaining rows: {len(df_cleaned)}")
+    else:
+        df_cleaned = df.copy()
+        print("Warning: No critical features found in dataset")
+    
+    # Step 2: Remove rows with too many missing values
+    print(f"\nApplying missing value threshold: {missing_threshold*100}%")
+    
+    # Calculate percentage of missing values per row (excluding ID and label columns)
+    feature_cols = [col for col in df_cleaned.columns 
+                   if col not in ['kepid', 'koi_disposition']]
+    
+    missing_per_row = df_cleaned[feature_cols].isnull().sum(axis=1) / len(feature_cols)
+    
+    # Keep rows where missing percentage is below threshold
+    rows_to_keep = missing_per_row <= missing_threshold
+    df_cleaned = df_cleaned[rows_to_keep].copy()
+    
+    removed_threshold = len(df) - removed_critical - len(df_cleaned)
+    print(f"Rows removed due to exceeding missing threshold: {removed_threshold}")
+    
+    # Final statistics
+    final_rows = len(df_cleaned)
+    total_removed = initial_rows - final_rows
+    removal_pct = (total_removed / initial_rows) * 100
+    
+    print(f"\n" + "-"*50)
+    print(f"Final number of rows: {final_rows}")
+    print(f"Total rows removed: {total_removed} ({removal_pct:.2f}%)")
+    print(f"Data retention rate: {(final_rows/initial_rows)*100:.2f}%")
+    
+    # Show class distribution after cleaning
+    if 'koi_disposition' in df_cleaned.columns:
+        print(f"\nClass distribution after cleaning:")
+        print(df_cleaned['koi_disposition'].value_counts())
+        print(f"\nPercentage distribution:")
+        for label, count in df_cleaned['koi_disposition'].value_counts().items():
+            pct = (count/final_rows)*100
+            print(f"  {label}: {count} ({pct:.2f}%)")
+    
+    return df_cleaned
+
+
+def load_and_extract_data(csv_path, output_path='exoplanet_data_clean.csv',
+                         missing_threshold=0.5, remove_inadequate=True):
+    """
+    Load the Kepler dataset, extract relevant features, and optionally clean data.
     
     Parameters:
     -----------
@@ -87,11 +177,15 @@ def load_and_extract_data(csv_path, output_path='exoplanet_data_clean.csv'):
         Path to the input CSV file
     output_path : str
         Path where the cleaned data will be saved
+    missing_threshold : float
+        Maximum proportion of missing values allowed per row (0 to 1)
+    remove_inadequate : bool
+        Whether to remove rows with inadequate data
     
     Returns:
     --------
     pandas.DataFrame
-        DataFrame containing only the selected features
+        DataFrame containing only the selected features (cleaned if requested)
     """
     print(f"Loading data from {csv_path}...")
     
@@ -119,31 +213,40 @@ def load_and_extract_data(csv_path, output_path='exoplanet_data_clean.csv'):
     
     # Display basic information about the target variable
     if 'koi_disposition' in df_extracted.columns:
-        print("\nTarget variable distribution (koi_disposition):")
+        print("\nTarget variable distribution (before cleaning):")
         print(df_extracted['koi_disposition'].value_counts())
         print(f"\nPercentage distribution:")
-        print(df_extracted['koi_disposition'].value_counts(normalize=True).round(4) * 100)
-        
-        # Show breakdown
-        total = len(df_extracted)
-        print(f"\nTotal samples: {total}")
         for label, count in df_extracted['koi_disposition'].value_counts().items():
-            pct = (count/total)*100
+            pct = (count/len(df_extracted))*100
             print(f"  {label}: {count} ({pct:.2f}%)")
     
-    # Display missing values information
-    print("\nMissing values per feature:")
+    # Display missing values information (before cleaning)
+    print("\nMissing values per feature (before cleaning):")
     missing_counts = df_extracted.isnull().sum()
     missing_pct = (missing_counts / len(df_extracted)) * 100
     missing_info = pd.DataFrame({
         'Missing_Count': missing_counts,
-        'Missing_Percentage': missing_pct
+        'Missing_Percentage': missing_pct.round(2)
     })
     print(missing_info[missing_info['Missing_Count'] > 0].sort_values('Missing_Count', ascending=False))
     
+    # Clean the data if requested
+    if remove_inadequate:
+        df_extracted = clean_data(df_extracted, missing_threshold=missing_threshold)
+        
+        # Show missing values after cleaning
+        print("\nMissing values per feature (after cleaning):")
+        missing_counts_clean = df_extracted.isnull().sum()
+        missing_pct_clean = (missing_counts_clean / len(df_extracted)) * 100
+        missing_info_clean = pd.DataFrame({
+            'Missing_Count': missing_counts_clean,
+            'Missing_Percentage': missing_pct_clean.round(2)
+        })
+        print(missing_info_clean[missing_info_clean['Missing_Count'] > 0].sort_values('Missing_Count', ascending=False))
+    
     # Save the extracted data
     df_extracted.to_csv(output_path, index=False)
-    print(f"\nExtracted data saved to: {output_path}")
+    print(f"\nCleaned data saved to: {output_path}")
     
     return df_extracted
 
@@ -179,13 +282,20 @@ if __name__ == "__main__":
     CSV_FILE_PATH = 'kepler.csv'
     OUTPUT_FILE_PATH = 'exoplanet_data_clean.csv'
     
-    # Extract the data
-    df = load_and_extract_data(CSV_FILE_PATH, OUTPUT_FILE_PATH)
+    # Extract and clean the data
+    # Adjust missing_threshold as needed (0.5 means 50% of features can be missing)
+    # Set remove_inadequate=False to skip data cleaning
+    df = load_and_extract_data(
+        CSV_FILE_PATH, 
+        OUTPUT_FILE_PATH,
+        missing_threshold=0.3,  # Adjust this value (0.0 to 1.0)
+        remove_inadequate=True   # Set to False to keep all rows
+    )
     
     # Display statistics
     get_data_statistics(df)
     
     print("\n" + "="*50)
-    print("Data extraction completed successfully!")
+    print("Data extraction and cleaning completed successfully!")
     print("="*50)
-    print(f"\nYou can now use '{OUTPUT_FILE_PATH}' for ML model training.")
+  
