@@ -11,6 +11,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, models, callbacks
 from tensorflow.keras.optimizers import Adam
+import pickle
+import json
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -35,6 +37,7 @@ class ExoplanetDeepNeuralNetwork:
         self.scaler = StandardScaler()
         self.label_encoder = LabelEncoder()
         self.imputer = SimpleImputer(strategy='median')
+        self.feature_columns = None
         
     def load_and_preprocess_data(self):
         """
@@ -56,6 +59,9 @@ class ExoplanetDeepNeuralNetwork:
         # Separate features and target
         feature_cols = [col for col in train_df.columns 
                        if col not in ['kepid', 'koi_disposition']]
+        
+        # Store feature columns for later use
+        self.feature_columns = feature_cols
         
         X_train = train_df[feature_cols]
         y_train = train_df['koi_disposition']
@@ -193,7 +199,7 @@ class ExoplanetDeepNeuralNetwork:
         
         # Compile model
         model.compile(
-            optimizer=Adam(learning_rate=0.001),
+            optimizer=Adam(learning_rate=0.0001),
             loss='binary_crossentropy',
             metrics=['accuracy', 
                     tf.keras.metrics.Precision(name='precision'),
@@ -241,7 +247,7 @@ class ExoplanetDeepNeuralNetwork:
             min_lr=0.00001,
             verbose=1
         )
-        
+    
         model_checkpoint = callbacks.ModelCheckpoint(
             'best_exoplanet_model.h5',
             monitor='val_accuracy',
@@ -306,6 +312,84 @@ class ExoplanetDeepNeuralNetwork:
                                    target_names=self.label_encoder.classes_))
         
         return y_pred, y_pred_prob
+    
+    def save_model_and_preprocessors(self, model_dir='saved_model'):
+        """
+        Save the trained model and all preprocessing objects.
+        """
+        import os
+        
+        print("\n" + "="*70)
+        print("SAVING MODEL AND PREPROCESSORS")
+        print("="*70)
+        
+        # Create directory if it doesn't exist
+        os.makedirs(model_dir, exist_ok=True)
+        
+        # 1. Save Keras model in H5 format
+        h5_path = os.path.join(model_dir, 'exoplanet_model.h5')
+        self.model.save(h5_path)
+        print(f"\n✓ Keras model saved: {h5_path}")
+        
+        # 2. Save model in SavedModel format (for TensorFlow Serving)
+        savedmodel_path = os.path.join(model_dir, 'exoplanet_savedmodel')
+        self.model.save(savedmodel_path, save_format='tf')
+        print(f"✓ TensorFlow SavedModel saved: {savedmodel_path}")
+        
+        # 3. Save scaler
+        scaler_path = os.path.join(model_dir, 'scaler.pkl')
+        with open(scaler_path, 'wb') as f:
+            pickle.dump(self.scaler, f)
+        print(f"✓ Scaler saved: {scaler_path}")
+        
+        # 4. Save imputer
+        imputer_path = os.path.join(model_dir, 'imputer.pkl')
+        with open(imputer_path, 'wb') as f:
+            pickle.dump(self.imputer, f)
+        print(f"✓ Imputer saved: {imputer_path}")
+        
+        # 5. Save label encoder
+        label_encoder_path = os.path.join(model_dir, 'label_encoder.pkl')
+        with open(label_encoder_path, 'wb') as f:
+            pickle.dump(self.label_encoder, f)
+        print(f"✓ Label encoder saved: {label_encoder_path}")
+        
+        # 6. Save feature columns
+        features_path = os.path.join(model_dir, 'feature_columns.pkl')
+        with open(features_path, 'wb') as f:
+            pickle.dump(self.feature_columns, f)
+        print(f"✓ Feature columns saved: {features_path}")
+        
+        # 7. Save model metadata
+        metadata = {
+            'model_name': 'Exoplanet Deep Neural Network',
+            'input_shape': self.model.input_shape,
+            'output_shape': self.model.output_shape,
+            'num_features': len(self.feature_columns),
+            'feature_columns': self.feature_columns,
+            'classes': self.label_encoder.classes_.tolist(),
+            'architecture': 'deep',
+            'training_date': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        metadata_path = os.path.join(model_dir, 'model_metadata.json')
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=4)
+        print(f"✓ Model metadata saved: {metadata_path}")
+        
+        print("\n" + "="*70)
+        print("ALL COMPONENTS SAVED SUCCESSFULLY!")
+        print("="*70)
+        print(f"\nSaved files in '{model_dir}' directory:")
+        print("  - exoplanet_model.h5 (Keras model)")
+        print("  - exoplanet_savedmodel/ (TensorFlow SavedModel)")
+        print("  - scaler.pkl (StandardScaler)")
+        print("  - imputer.pkl (SimpleImputer)")
+        print("  - label_encoder.pkl (LabelEncoder)")
+        print("  - feature_columns.pkl (Feature names)")
+        print("  - model_metadata.json (Model information)")
+        
+        return model_dir
     
     def plot_training_history(self, save_path='training_history.png'):
         """
@@ -474,11 +558,15 @@ class ExoplanetDeepNeuralNetwork:
         self.plot_confusion_matrix(y_test, y_pred)
         self.plot_roc_curve(y_test, y_pred_prob)
         
+        # Save model and preprocessors
+        self.save_model_and_preprocessors()
+        
         print("\n" + "="*70)
         print("PIPELINE COMPLETED SUCCESSFULLY!")
         print("="*70)
         print("\nGenerated files:")
-        print("  - best_exoplanet_model.h5 (saved model)")
+        print("  - best_exoplanet_model.h5 (checkpoint model)")
+        print("  - saved_model/ directory (all model components)")
         print("  - training_history.png")
         print("  - confusion_matrix.png")
         print("  - roc_curve.png")
@@ -506,4 +594,4 @@ if __name__ == "__main__":
     )
     
     print("\n🚀 Deep learning model training complete!")
-    print("Your exoplanet detection model is ready!")
+    print("✅ Model and all components exported successfully!")

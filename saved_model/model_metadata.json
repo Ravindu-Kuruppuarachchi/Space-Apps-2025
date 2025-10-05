@@ -1,0 +1,61 @@
+{
+    "model_name": "Enhanced Exoplanet Deep Neural Network",
+    "input_shape": [
+        null,
+        38
+    ],
+    "output_shape": [
+        null,
+        1
+    ],
+    "num_features": 38,
+    "feature_columns": [
+        "koi_period",
+        "koi_time0bk",
+        "koi_impact",
+        "koi_impact_err1",
+        "koi_impact_err2",
+        "koi_duration",
+        "koi_duration_err1",
+        "koi_depth",
+        "koi_depth_err1",
+        "koi_srho",
+        "koi_srho_err1",
+        "koi_srho_err2",
+        "koi_prad",
+        "koi_prad_err1",
+        "koi_incl",
+        "koi_teq",
+        "koi_insol",
+        "koi_insol_err1",
+        "koi_dor",
+        "koi_dor_err1",
+        "koi_ldm_coeff1",
+        "koi_max_sngle_ev",
+        "koi_max_mult_ev",
+        "koi_model_snr",
+        "koi_count",
+        "koi_num_transits",
+        "koi_bin_oedp_sig",
+        "koi_steff",
+        "koi_steff_err1",
+        "koi_steff_err2",
+        "koi_slogg",
+        "koi_slogg_err1",
+        "koi_srad",
+        "koi_srad_err1",
+        "koi_srad_err2",
+        "koi_smass",
+        "koi_smass_err2",
+        "koi_fwm_stat_sig"
+    ],
+    "classes": [
+        "CONFIRMED",
+        "FALSE POSITIVE"
+    ],
+    "architecture": "deep",
+    "activation": "LeakyReLU",
+    "regularization": "L2",
+    "lr_schedule": "CosineDecayRestarts",
+    "training_date": "2025-10-04 17:01:16"
+}

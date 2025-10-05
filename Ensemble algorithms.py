@@ -136,7 +136,7 @@ class ExoplanetEnsembleClassifier:
             ),
             
             'Neural Network': MLPClassifier(
-                hidden_layer_sizes=(100, 500),
+                hidden_layer_sizes=(100, 50),
                 max_iter=500,
                 random_state=42
             ),
